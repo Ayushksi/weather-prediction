@@ -138,27 +138,34 @@ with col1:
     st.subheader("Select Location on Map")
     map_obj = create_map(st.session_state.lat, st.session_state.lon)
     map_data = st_folium(map_obj, width=700, height=450)
-    if map_data and map_data.get("last_clicked"):
-        lat_clicked = map_data["last_clicked"]["lat"]
-        lon_clicked = map_data["last_clicked"]["lng"]
-        st.session_state.lat, st.session_state.lon = lat_clicked, lon_clicked
-        try:
-            url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat_clicked}&lon={lon_clicked}"
-            response = requests.get(url, headers={"User-Agent": "streamlit-weather-app"})
-            data = response.json()
-            st.session_state.location_name = data.get("display_name", f"{lat_clicked:.2f}, {lon_clicked:.2f}")
-        except:
-            st.session_state.location_name = f"{lat_clicked:.2f}, {lon_clicked:.2f}"
-        st.info(f"Map Selected: {st.session_state.location_name}")
 
-    
+    # Store clicked location temporarily
+    if map_data and map_data.get("last_clicked"):
+        st.session_state.temp_lat = map_data["last_clicked"]["lat"]
+        st.session_state.temp_lon = map_data["last_clicked"]["lng"]
+
+    # Add a "GO" button to confirm map selection
+    if st.button("GO", key="map_go"):
+        if "temp_lat" in st.session_state and "temp_lon" in st.session_state:
+            st.session_state.lat = st.session_state.temp_lat
+            st.session_state.lon = st.session_state.temp_lon
+            try:
+                url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={st.session_state.lat}&lon={st.session_state.lon}"
+                response = requests.get(url, headers={"User-Agent": "streamlit-weather-app"})
+                data = response.json()
+                st.session_state.location_name = data.get("display_name", f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}")
+            except:
+                st.session_state.location_name = f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
+            st.success(f"📍 Location confirmed: {st.session_state.location_name}")
+        else:
+            st.warning("Click on the map first before pressing GO.")
 
 with col2:
-    hot_thresh = st.slider("Hot > °C", 20, 50, 35)
-    cold_thresh = st.slider("Cold < °C", -20, 20, 5)
-    wind_thresh = st.slider("Wind > m/s", 0, 30, 10)
-    rain_thresh = st.slider("Rain > mm", 0, 50, 10)
-    humidity_thresh = st.slider("Humid > %", 0, 100, 80)
+    hot_thresh = st.slider("Hot > °C (Default : 35)", 20, 50, 35)
+    cold_thresh = st.slider("Cold < °C (Default : 5)", -20, 20, 5)
+    wind_thresh = st.slider("Wind > m/s (Default : 10)", 0, 30, 10)
+    rain_thresh = st.slider("Rain > mm (Default : 10)", 0, 50, 10)
+    humidity_thresh = st.slider("Humid > % (Default : 80)", 0, 100, 80)
 
     check_btn = st.button("🔍 Check Weather Probability", use_container_width=True)
     
