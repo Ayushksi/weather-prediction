@@ -138,17 +138,16 @@ st.markdown(f"**Selected Location:** {selected_location}")
 # Threshold Sliders (Compact)
 st.subheader("⚙️ Weather Thresholds")
 
-# Arrange sliders in two columns for compact view
-col1, col2 = st.columns(2)
+# Add side margins with 1/6 width empty columns
+left_margin, slider_col, right_margin = st.columns([1, 4, 1])
 
-with col1:
+with slider_col:
     hot_thresh = st.slider("Hot > °C", 20, 50, 35, key="hot")
+    cold_thresh = st.slider("Cold < °C", -20, 20, 5, key="cold")
     wind_thresh = st.slider("Wind > m/s", 0, 30, 10, key="wind")
+    rain_thresh = st.slider("Rain > mm", 0, 50, 10, key="rain")
     humidity_thresh = st.slider("Humid > %", 0, 100, 80, key="humidity")
 
-with col2:
-    cold_thresh = st.slider("Cold < °C", -20, 20, 5, key="cold")
-    rain_thresh = st.slider("Rain > mm", 0, 50, 10, key="rain")
 
 # === Tabs ===
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "📈 Trends", "🗺️ Map", "📑 Report"])
@@ -196,4 +195,5 @@ if check_btn:
             st.subheader("📑 Export Report")
             st.download_button("⬇️ Download CSV", subset.to_csv(index=False), "weather.csv")
             st.download_button("⬇️ Download Excel", get_excel_download_link(subset), "weather.xlsx")
+
 
