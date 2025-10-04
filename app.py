@@ -160,7 +160,7 @@ with col1:
     st.markdown(f"**Selected Location:** {selected_location}")
 
 with col2:
-    hot_thresh = st.slider("Hot > °C (Default : 35)", 20, 50, 35)
+    hot_thresh = st.slider("Hot > °C", 20, 50, 35)
     cold_thresh = st.slider("Cold < °C", -20, 20, 5)
     wind_thresh = st.slider("Wind > m/s", 0, 30, 10)
     rain_thresh = st.slider("Rain > mm", 0, 50, 10)
@@ -215,4 +215,5 @@ if check_btn:
             st.subheader("📑 Export Report")
             st.download_button("⬇️ Download CSV", subset.to_csv(index=False), "weather.csv")
             st.download_button("⬇️ Download Excel", get_excel_download_link(subset), "weather.xlsx")
+
 
