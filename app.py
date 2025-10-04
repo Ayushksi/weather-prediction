@@ -162,20 +162,40 @@ if check_btn:
         results, subset = analyze_conditions(df, month, day, hot_thresh, cold_thresh, wind_thresh, rain_thresh, humidity_thresh)
 
         with tab1:
-            st.subheader("🌡️ Condition Probabilities")
+            st.subheader("🌡️ Condition Probabilities Overview")
             location_name = st.session_state.location_name
+        
+            # Overall Rain Summary
             rain_prob_key = f"🌧️ Very Wet (>{rain_thresh} mm)"
             rain_prob = results.get(rain_prob_key, 0)
             if rain_prob > 50:
                 st.markdown(f"### 🌧️ WILL RAIN ON {location_name.upper()}")
             else:
                 st.markdown(f"### ☀️ WILL NOT RAIN ON {location_name.upper()}")
-            for k, v in results.items():
-                if "%" in k or "Comfort" in k:
-                    st.write(f"{k}:")
-                    st.progress(int(v))
-                else:
-                    st.metric(k, f"{v:.2f}")
+        
+            # === 3 Columns Layout ===
+            col1, col2, col3 = st.columns(3)
+        
+            with col1:
+                st.markdown("### 🌡 Temperature")
+                st.metric("Average Temp (°C)", f"{results['Average Temperature (°C)']:.2f}")
+                st.progress(min(100, max(0, int((results['Average Temperature (°C)']+20)/70*100))))
+                st.metric(f"☀️ Hot Days >{hot_thresh}°C", f"{results[f'☀️ Very Hot (>{hot_thresh}°C)']:.1f}%")
+                st.metric(f"❄️ Cold Days <{cold_thresh}°C", f"{results[f'❄️ Very Cold (<{cold_thresh}°C)']:.1f}%")
+        
+            with col2:
+                st.markdown("### 💧 Precipitation & Humidity")
+                st.metric("Average Rainfall (mm)", f"{results['Average Rainfall (mm)']:.2f}")
+                st.progress(min(100, max(0, int(results[f'🌧️ Very Wet (>{rain_thresh} mm)']))))
+                st.metric("Average Humidity (%)", f"{results['Average Humidity (%)']:.1f}")
+                st.metric(f"🥵 Very Uncomfortable", f"{results['🥵 Very Uncomfortable']:.1f}%")
+        
+            with col3:
+                st.markdown("### 🌬 Wind & Comfort")
+                st.metric("Average Windspeed (m/s)", f"{results['Average Windspeed (m/s)']:.2f}")
+                st.progress(min(100, max(0, int(results['Average Windspeed (m/s)']*3.3))))  # scale for visualization
+                st.metric("Comfort Index", f"{results['Comfort Index']:.1f}%")
+                st.metric(f"🌬 Very Windy >{wind_thresh} m/s", f"{results[f'🌬️ Very Windy (>{wind_thresh} m/s)']:.1f}%")
 
         with tab2:
             st.subheader("📈 Interactive Weather Trends")
@@ -185,6 +205,24 @@ if check_btn:
             st.subheader("🌞 Seasonal Heatmap")
             heat = df.groupby([df["date"].dt.month, df["date"].dt.day])["temperature"].mean().unstack()
             st.write(px.imshow(heat, title="Average Daily Temperature Heatmap"))
+            
+            # === Additional Graphs for Overview ===
+            st.markdown("### 📊 Temperature & Rain Distribution")
+            overview_fig = px.scatter(
+                subset,
+                x="temperature",
+                y="precip",
+                size="humidity",
+                color="windspeed",
+                labels={
+                    "temperature": "Temp (°C)",
+                    "precip": "Rainfall (mm)",
+                    "humidity": "Humidity (%)",
+                    "windspeed": "Windspeed (m/s)"
+                },
+                title="Temperature vs Rainfall (Bubble size = Humidity, Color = Windspeed)"
+            )
+            st.plotly_chart(overview_fig, use_container_width=True)
 
         with tab3:
             st.subheader("🗺️ Location")
@@ -194,6 +232,7 @@ if check_btn:
             st.subheader("📑 Export Report")
             st.download_button("⬇️ Download CSV", subset.to_csv(index=False), "weather.csv")
             st.download_button("⬇️ Download Excel", get_excel_download_link(subset), "weather.xlsx")
+
 
 
 
