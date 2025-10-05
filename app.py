@@ -83,7 +83,7 @@ def get_pdf_download_link(df):
 # === Streamlit Page Config ===
 st.set_page_config(page_title="NASA Weather Predictor", layout="wide")
 st.title("🌍 WILL IT RAIN ON MY PARADE?")
-st.markdown("Check probabilities of weather conditions for any place and date.")
+st.markdown("🔍Check probabilities of weather conditions for any place and date.")
 
 # === Session Defaults ===
 if "lat" not in st.session_state:
@@ -95,85 +95,93 @@ if "location_name" not in st.session_state:
 
 # === Sidebar Favorites ===
 st.sidebar.header("⭐ Favorites")
-if st.sidebar.button("Save Current Location"):
+if st.sidebar.button("✅Save Current Location"):
     current = (st.session_state.lat, st.session_state.lon, st.session_state.location_name)
     if current not in st.session_state.favorites:
         st.session_state.favorites.append(current)
-        st.success(f"Saved location: {st.session_state.location_name}")
+        st.success(f"🗺️Saved location: {st.session_state.location_name}")
 
 for idx, (lat, lon, name) in enumerate(st.session_state.favorites):
     colA, colB = st.sidebar.columns([3,1])
     if colA.button(f"Go ({name})", key=f"go{idx}"):
         st.session_state.lat, st.session_state.lon, st.session_state.location_name = lat, lon, name
-        st.info(f"Moved to favorite location: {name}")
+        st.info(f"✅Moved to favorite location: {name}")
     if colB.button("❌", key=f"del{idx}"):
         st.session_state.favorites = [
             f for i, f in enumerate(st.session_state.favorites) if i != idx
         ]
-        st.success(f"Deleted favorite: {name}")
+        st.success(f"✅Deleted favorite: {name}")
 
-# === Inputs ===
-col1, col2 = st.columns([1,1])
-with col1:
-    st.subheader("Search Location")
-    search_query = st.text_input("Type a location (city, country, address)")
-    if st.button("Go", key="search_go"):
-        if search_query:
-            try:
-                url = f"https://nominatim.openstreetmap.org/search?format=json&q={search_query}"
-                response = requests.get(url, headers={"User-Agent": "streamlit-weather-app"})
-                data = response.json()
-                if data:
-                    st.session_state.lat = float(data[0]["lat"])
-                    st.session_state.lon = float(data[0]["lon"])
-                    st.session_state.location_name = data[0]['display_name']
-                    st.info(f"📍 {data[0]['display_name']}")
-                else:
-                    st.warning("Location not found.")
-            except:
-                st.error("Error fetching location data.")
+# === Inputs in Single Column ===
+st.subheader("🔍Search Location")
+search_query = st.text_input("⌨️Type a location (city, country, address)")
 
-    date = st.date_input("Pick Date", datetime.today())
+if st.button("✅CONFIRM", key="search_go"):
+    if search_query:
+        try:
+            url = f"https://nominatim.openstreetmap.org/search?format=json&q={search_query}"
+            response = requests.get(url, headers={"User-Agent": "streamlit-weather-app"})
+            data = response.json()
+            if data:
+                st.session_state.lat = float(data[0]["lat"])
+                st.session_state.lon = float(data[0]["lon"])
+                st.session_state.location_name = data[0]['display_name']
+                st.info(f"📍 {data[0]['display_name']}")
+            else:
+                st.warning("❌Location not found.")
+        except:
+            st.error("❌Error fetching location data.")
 
-    st.subheader("Select Location on Map")
-    map_obj = create_map(st.session_state.lat, st.session_state.lon)
-    map_data = st_folium(map_obj, width=700, height=450)
+date = st.date_input("🗓️Pick Date", datetime.today())
 
-    # Store clicked location temporarily
-    if map_data and map_data.get("last_clicked"):
-        st.session_state.temp_lat = map_data["last_clicked"]["lat"]
-        st.session_state.temp_lon = map_data["last_clicked"]["lng"]
+st.subheader("📍Select Location on Map (If Needed)")
+map_obj = create_map(st.session_state.lat, st.session_state.lon)
+map_data = st_folium(map_obj, width=700, height=450)
 
-    # Add a "GO" button to confirm map selection
-    if st.button("GO", key="map_go"):
-        if "temp_lat" in st.session_state and "temp_lon" in st.session_state:
-            st.session_state.lat = st.session_state.temp_lat
-            st.session_state.lon = st.session_state.temp_lon
-            try:
-                url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={st.session_state.lat}&lon={st.session_state.lon}"
-                response = requests.get(url, headers={"User-Agent": "streamlit-weather-app"})
-                data = response.json()
-                st.session_state.location_name = data.get("display_name", f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}")
-            except:
-                st.session_state.location_name = f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
-            st.success(f"📍 Location confirmed: {st.session_state.location_name}")
-        else:
-            st.warning("Click on the map first before pressing GO.")
+# Store clicked location temporarily
+if map_data and map_data.get("last_clicked"):
+    st.session_state.temp_lat = map_data["last_clicked"]["lat"]
+    st.session_state.temp_lon = map_data["last_clicked"]["lng"]
 
-with col2:
-    hot_thresh = st.slider("Hot > °C (Default : 35)", 20, 50, 35)
-    cold_thresh = st.slider("Cold < °C (Default : 5)", -20, 20, 5)
-    wind_thresh = st.slider("Wind > m/s (Default : 10)", 0, 30, 10)
-    rain_thresh = st.slider("Rain > mm (Default : 10)", 0, 50, 10)
-    humidity_thresh = st.slider("Humid > % (Default : 80)", 0, 100, 80)
+# Add a "CONFIRM" button to confirm map selection
+if st.button("✅CONFIRM", key="map_go"):
+    if "temp_lat" in st.session_state and "temp_lon" in st.session_state:
+        st.session_state.lat = st.session_state.temp_lat
+        st.session_state.lon = st.session_state.temp_lon
+        try:
+            url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={st.session_state.lat}&lon={st.session_state.lon}"
+            response = requests.get(url, headers={"User-Agent": "streamlit-weather-app"})
+            data = response.json()
+            st.session_state.location_name = data.get(
+                "display_name",
+                f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
+            )
+        except:
+            st.session_state.location_name = f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
+        st.success(f"📍Selected Location: {st.session_state.location_name}")
+    else:
+        st.warning("⚠️Click on the map first before pressing CONFIRM.")
 
-    check_btn = st.button("🔍 Check Weather Probability", use_container_width=True)
-    
-    # Display selected location below the button
-    selected_location = st.session_state.get("location_name", "")
-    if not selected_location or selected_location == "Selected Location":
-        selected_location = "NOT LOCATED"
-    st.markdown(f"**Selected Location:** {selected_location}")
+# === Helper text below map CONFIRM button ===
+st.markdown(
+    "<span style='color: gray;'>After clicking on the map, double click CONFIRM with 1 second delay.</span>",
+    unsafe_allow_html=True
+)
+
+st.subheader("Weather Thresholds")
+hot_thresh = st.slider("Hot > °C (Default : 35)", 20, 50, 35)
+cold_thresh = st.slider("Cold < °C (Default : 5)", -20, 20, 5)
+wind_thresh = st.slider("Wind > m/s (Default : 10)", 0, 30, 10)
+rain_thresh = st.slider("Rain > mm (Default : 10)", 0, 50, 10)
+humidity_thresh = st.slider("Humid > % (Default : 80)", 0, 100, 80)
+
+check_btn = st.button("🔍 Check Weather Probability", use_container_width=True)
+
+# Display selected location below the button
+selected_location = st.session_state.get("location_name", "")
+if not selected_location or selected_location == "Selected Location":
+    selected_location = "NOT LOCATED"
+st.markdown(f"**Selected Location:** {selected_location}")
 
 # === Tabs ===
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "📈 Trends", "🗺️ Map", "📑 Report"])
