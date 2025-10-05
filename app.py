@@ -168,20 +168,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.subheader("Weather Thresholds")
-hot_thresh = st.slider("Hot > °C (Default : 35)", 20, 50, 35)
-cold_thresh = st.slider("Cold < °C (Default : 5)", -20, 20, 5)
-wind_thresh = st.slider("Wind > m/s (Default : 10)", 0, 30, 10)
-rain_thresh = st.slider("Rain > mm (Default : 10)", 0, 50, 10)
-humidity_thresh = st.slider("Humid > % (Default : 80)", 0, 100, 80)
+st.subheader("⚙️Weather Thresholds")
+hot_thresh = st.slider("🥵Hot > °C (Default : 35)", 20, 50, 35)
+cold_thresh = st.slider("🥶Cold < °C (Default : 5)", -20, 20, 5)
+wind_thresh = st.slider("🌬️Wind > m/s (Default : 10)", 0, 30, 10)
+rain_thresh = st.slider("⛈️Rain > mm (Default : 10)", 0, 50, 10)
+humidity_thresh = st.slider("🥵Humid > % (Default : 80)", 0, 100, 80)
 
 check_btn = st.button("🔍 Check Weather Probability", use_container_width=True)
 
 # Display selected location below the button
 selected_location = st.session_state.get("location_name", "")
 if not selected_location or selected_location == "Selected Location":
-    selected_location = "NOT LOCATED"
-st.markdown(f"**Selected Location:** {selected_location}")
+    selected_location = "❌NOT LOCATED"
+st.markdown(f"✅**Selected Location:** {selected_location}")
 
 # === Tabs ===
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "📈 Trends", "🗺️ Map", "📑 Report"])
