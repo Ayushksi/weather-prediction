@@ -4,4 +4,6 @@ requests
 plotly
 folium
 streamlit-folium
+numpy
+python-dateutil
 openpyxl
