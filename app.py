@@ -158,13 +158,13 @@ if st.button("✅CONFIRM", key="map_go"):
             )
         except:
             st.session_state.location_name = f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
-        st.success(f"📍Selected Location: {st.session_state.location_name}")
+        st.success(f"⚠️ Click CONFIRM again to confirm location : {st.session_state.location_name}")
     else:
         st.warning("⚠️Click on the map first before pressing CONFIRM.")
 
 # === Helper text below map CONFIRM button ===
 st.markdown(
-    "<span style='color: gray;'>After clicking on the map, double click CONFIRM with 1 second delay.</span>",
+    "<span style='color: gray;'>Click on the map location and click CONFIRM.</span>",
     unsafe_allow_html=True
 )
 
