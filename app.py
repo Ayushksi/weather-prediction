@@ -266,38 +266,3 @@ if check_btn:
             st.subheader("📑 Export Report")
             st.download_button("⬇️ Download CSV", subset.to_csv(index=False), "weather.csv")
             st.download_button("⬇️ Download Excel", get_excel_download_link(subset), "weather.xlsx")
-
-st.markdown(
-    """
-    <style>
-    /* Full-page background image */
-    .stApp {
-        background-image: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        filter: brightness(1.00); /* Darken background */
-    }
-
-    /* Optional: Semi-transparent content box */
-    .content {
-        background-color: rgba(255, 255, 255, 0.7); /* light box for text */
-        padding: 20px;
-        border-radius: 15px;
-    }
-
-    /* Make all text black */
-    h1, h2, h3, h4, h5, h6, p, label, span, div, button, input, select {
-        color: #000 !important;
-    }
-
-    /* Optional: placeholder text in input fields */
-    input::placeholder {
-        color: #000 !important;
-        opacity: 1;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
