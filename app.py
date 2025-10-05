@@ -87,19 +87,22 @@ st.markdown("🔍Check probabilities of weather conditions for any place and dat
 
 # === Session Defaults ===
 if "lat" not in st.session_state:
-    st.session_state.lat, st.session_state.lon = 40.7128, -74.0060
+    st.session_state.lat, st.session_state.lon = None, None
 if "favorites" not in st.session_state:
     st.session_state.favorites = []
 if "location_name" not in st.session_state:
-    st.session_state.location_name = "Selected Location"
+    st.session_state.location_name = "❌NOT LOCATED"
 
 # === Sidebar Favorites ===
 st.sidebar.header("⭐ Favorites")
 if st.sidebar.button("✅Save Current Location"):
-    current = (st.session_state.lat, st.session_state.lon, st.session_state.location_name)
-    if current not in st.session_state.favorites:
-        st.session_state.favorites.append(current)
-        st.success(f"🗺️Saved location: {st.session_state.location_name}")
+    if st.session_state.lat is not None:
+        current = (st.session_state.lat, st.session_state.lon, st.session_state.location_name)
+        if current not in st.session_state.favorites:
+            st.session_state.favorites.append(current)
+            st.success(f"🗺️Saved location: {st.session_state.location_name}")
+    else:
+        st.warning("⚠️Please select a location first!")
 
 for idx, (lat, lon, name) in enumerate(st.session_state.favorites):
     colA, colB = st.sidebar.columns([3,1])
@@ -112,7 +115,7 @@ for idx, (lat, lon, name) in enumerate(st.session_state.favorites):
         ]
         st.success(f"✅Deleted favorite: {name}")
 
-# === Inputs in Single Column ===
+# === Search Box ===
 st.subheader("🔍Search Location")
 search_query = st.text_input("⌨️Type a location (city, country, address)")
 
@@ -134,16 +137,15 @@ if st.button("✅CONFIRM", key="search_go"):
 
 date = st.date_input("🗓️Pick Date", datetime.today())
 
+# === Map Selection ===
 st.subheader("📍Select Location on Map (If Needed)")
-map_obj = create_map(st.session_state.lat, st.session_state.lon)
+map_obj = create_map(st.session_state.lat or 20, st.session_state.lon or 78)  # Default India center
 map_data = st_folium(map_obj, width=700, height=450)
 
-# Store clicked location temporarily
 if map_data and map_data.get("last_clicked"):
     st.session_state.temp_lat = map_data["last_clicked"]["lat"]
     st.session_state.temp_lon = map_data["last_clicked"]["lng"]
 
-# Add a "CONFIRM" button to confirm map selection
 if st.button("✅CONFIRM", key="map_go"):
     if "temp_lat" in st.session_state and "temp_lon" in st.session_state:
         st.session_state.lat = st.session_state.temp_lat
@@ -158,16 +160,13 @@ if st.button("✅CONFIRM", key="map_go"):
             )
         except:
             st.session_state.location_name = f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
-        st.success(f"⚠️ Click CONFIRM again to confirm location : {st.session_state.location_name}")
+        st.success(f"✅Location selected: {st.session_state.location_name}")
     else:
         st.warning("⚠️Click on the map first before pressing CONFIRM.")
 
-# === Helper text below map CONFIRM button ===
-st.markdown(
-    "<span style='color: gray;'>Click on the map location and click CONFIRM.</span>",
-    unsafe_allow_html=True
-)
+st.markdown("<span style='color: gray;'>Click on the map location and click CONFIRM.</span>", unsafe_allow_html=True)
 
+# === Threshold Sliders ===
 st.subheader("⚙️Weather Thresholds")
 hot_thresh = st.slider("🥵Hot > °C (Default : 35)", 20, 50, 35)
 cold_thresh = st.slider("🥶Cold < °C (Default : 5)", -20, 20, 5)
@@ -175,18 +174,22 @@ wind_thresh = st.slider("🌬️Wind > m/s (Default : 10)", 0, 30, 10)
 rain_thresh = st.slider("⛈️Rain > mm (Default : 10)", 0, 50, 10)
 humidity_thresh = st.slider("🥵Humid > % (Default : 80)", 0, 100, 80)
 
-check_btn = st.button("🔍 Check Weather Probability", use_container_width=True)
+# === Enable Check Button only when location is selected ===
+location_valid = (
+    st.session_state.lat is not None
+    and st.session_state.lon is not None
+    and st.session_state.location_name != "❌NOT LOCATED"
+)
 
-# Display selected location below the button
-selected_location = st.session_state.get("location_name", "")
-if not selected_location or selected_location == "Selected Location":
-    selected_location = "❌NOT LOCATED"
+check_btn = st.button("🔍 Check Weather Probability", use_container_width=True, disabled=not location_valid)
+
+selected_location = st.session_state.get("location_name", "❌NOT LOCATED")
 st.markdown(f"✅**Selected Location:** {selected_location}")
 
 # === Tabs ===
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "📈 Trends", "🗺️ Map", "📑 Report"])
 
-if check_btn:
+if check_btn and location_valid:
     lat, lon = st.session_state.lat, st.session_state.lon
     df = fetch_weather(lat, lon)
     if df.empty:
@@ -198,16 +201,17 @@ if check_btn:
         with tab1:
             st.subheader("🌡️ Condition Probabilities Overview")
             location_name = st.session_state.location_name
+            selected_date_str = date.strftime("%d %B %Y")  # Example: 05 October 2025
 
-            # Overall Rain Summary
             rain_prob_key = f"🌧️ Very Wet (>{rain_thresh} mm)"
             rain_prob = results.get(rain_prob_key, 0)
-            if rain_prob > 50:
-                st.markdown(f"### 🌧️ WILL RAIN ON {location_name.upper()}")
-            else:
-                st.markdown(f"### ☀️ WILL NOT RAIN ON {location_name.upper()}")
 
-            # === 3 Columns Layout ===
+            if rain_prob > 50:
+                st.markdown(f"### 🌧️ WILL RAIN ON {location_name.upper()} ({selected_date_str})")
+            else:
+                st.markdown(f"### ☀️ WILL NOT RAIN ON {location_name.upper()} ({selected_date_str})")
+
+            col1, col2, col3 = st.columns(3)
             col1, col2, col3 = st.columns(3)
 
             with col1:
@@ -231,6 +235,7 @@ if check_btn:
                 st.metric("Comfort Index", f"{results['Comfort Index']:.1f}%")
                 st.metric(f"🌬 Very Windy >{wind_thresh} m/s", f"{results[f'🌬️ Very Windy (>{wind_thresh} m/s)']:.1f}%")
 
+
         with tab2:
             st.subheader("📈 Interactive Weather Trends")
             fig = px.line(subset, x=subset["date"].dt.year, y="temperature", title="Temperature Trend", markers=True)
@@ -239,7 +244,7 @@ if check_btn:
             st.subheader("🌞 Seasonal Heatmap")
             heat = df.groupby([df["date"].dt.month, df["date"].dt.day])["temperature"].mean().unstack()
             st.write(px.imshow(heat, title="Average Daily Temperature Heatmap"))
-            
+
             # === Additional Graphs for Overview ===
             st.markdown("### 📊 Temperature & Rain Distribution")
             overview_fig = px.scatter(
