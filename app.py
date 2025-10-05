@@ -160,7 +160,7 @@ if st.button("✅CONFIRM", key="map_go"):
             )
         except:
             st.session_state.location_name = f"{st.session_state.lat:.2f}, {st.session_state.lon:.2f}"
-        st.success(f"✅Location selected: {st.session_state.location_name}")
+        st.success(f"⚠️ Click CONFIRM again to confirm location : {st.session_state.location_name}")
     else:
         st.warning("⚠️Click on the map first before pressing CONFIRM.")
 
